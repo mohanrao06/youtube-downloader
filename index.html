@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Study Videos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    
+    <main>
+        <section class="playlist-section">
+            <h2>Select a Playlist</h2>
+            <div class="playlist-container" id="playlistButtons"></div>
+        </section>
+        
+        <section class="video-section">
+            <h2 id="playlistTitle">Videos</h2>
+            <div class="container" id="videoList"></div>
+        </section>
+        
+        <section class="progress-section">
+            <progress id="progressBar" value="0" max="100" style="width: 100%; display: none;"></progress>
+            <p id="progressText"></p>
+        </section>
+        
+        <section class="download-section">
+            <h2>Downloaded Videos</h2>
+            <hr>
+            <div id="downloadedVideos" class="playlist-container"></div>
+        </section>
+    </main>
+    
+    
+    
+    <script src="script.js"></script>
+</body>
+</html>
