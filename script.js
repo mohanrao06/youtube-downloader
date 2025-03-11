@@ -1,5 +1,7 @@
 const apiKey = "AIzaSyAqlhGyZUTLMn4-AuC_tyMrNl2lv6M2SNQ"; // Replace with your YouTube API Key
 
+const backendURL = "https://youtube-downloader-b2nm.onrender.com";
+
 const playlists = [
     { id: "PLgUwDviBIf0rGlzIn_7rsaR2FQ5e6ZOL9", name: "Recursion" },
     { id: "PLabc123xyz456", name: "Playlist 2" },
@@ -25,25 +27,21 @@ playlists.forEach(playlist => {
 
 // Fetch and display videos
 async function loadVideos(playlistId, name) {
-    if (playlistId === currentPlaylistId) return; // Skip if the same playlist is selected
+    if (playlistId === currentPlaylistId) return;
 
     playlistTitle.innerText = name;
     currentPlaylistId = playlistId;
-
-    if (videoList.children.length === 0) { // Prevent unnecessary clearing
-        videoList.innerHTML = "";
-    }
+    videoList.innerHTML = "";
 
     try {
         const response = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=10&key=${apiKey}`);
         const data = await response.json();
 
-        videoList.innerHTML = ""; // Clear the video list before rendering new videos
+        videoList.innerHTML = "";
 
         data.items.forEach(item => {
             const videoId = item.snippet.resourceId.videoId;
             const title = item.snippet.title;
-
             const videoElement = document.createElement("div");
             videoElement.classList.add("video-box");
             videoElement.innerHTML = `
@@ -63,17 +61,13 @@ async function loadVideos(playlistId, name) {
 
 // Download video and refresh list
 async function downloadVideo(event, videoId) {
-    console.log("Download button clicked"); // Debugging
-    event.preventDefault(); // Prevent default button behavior
-    event.stopPropagation(); // Stop event bubbling
-
-    console.log("Video ID:", videoId); // Debugging
+    event.preventDefault();
+    event.stopPropagation();
 
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
     try {
-        console.log("Sending download request..."); // Debugging
-        const response = await fetch('http://localhost:5000/download', {
+        const response = await fetch(`${backendURL}/download`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: videoUrl })
@@ -82,10 +76,8 @@ async function downloadVideo(event, videoId) {
         if (!response.ok) throw new Error(`Server Error: ${response.status}`);
 
         const data = await response.json();
-        console.log("Download response:", data); // Debugging
 
         if (data.video_id) {
-            console.log("Download started, showing progress..."); // Debugging
             showProgress(data.video_id);
         }
     } catch (error) {
@@ -96,30 +88,24 @@ async function downloadVideo(event, videoId) {
 
 // Fetch and display downloaded videos
 async function updateDownloadedVideos() {
-    console.log("Updating downloaded videos list..."); // Debugging
     try {
-        const response = await fetch('http://localhost:5000/downloaded_videos');
+        const response = await fetch(`${backendURL}/downloaded_videos`);
         const data = await response.json();
 
-        const currentVideos = Array.from(downloadedVideosContainer.children).map(child => child.querySelector('p').innerText);
-        const newVideos = data.videos.filter(filename => !currentVideos.includes(filename));
+        downloadedVideosContainer.innerHTML = "";
 
-        if (newVideos.length > 0) {
-            console.log("New videos found:", newVideos); // Debugging
-
-            newVideos.forEach(filename => {
-                const videoElement = document.createElement("div");
-                videoElement.classList.add("video-box");
-                videoElement.innerHTML = `
-                    <p>${filename}</p>
-                    <video controls width="320">
-                        <source src="http://localhost:5000/get_video/${filename}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                `;
-                downloadedVideosContainer.appendChild(videoElement);
-            });
-        }
+        data.videos.forEach(filename => {
+            const videoElement = document.createElement("div");
+            videoElement.classList.add("video-box");
+            videoElement.innerHTML = `
+                <p>${filename}</p>
+                <video controls width="320">
+                    <source src="${backendURL}/get_video/${filename}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            `;
+            downloadedVideosContainer.appendChild(videoElement);
+        });
     } catch (error) {
         console.error("Failed to fetch downloaded videos:", error);
     }
@@ -129,31 +115,29 @@ async function updateDownloadedVideos() {
 async function showProgress(videoId) {
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
-
-    progressBar.style.display = "block"; // Show progress bar
+    progressBar.style.display = "block";
 
     let retries = 0;
 
-    while (retries < 50) { // Stop after 50 attempts (100 sec max)
+    while (retries < 50) {
         try {
-            const response = await fetch(`http://localhost:5000/progress/${videoId}`);
+            const response = await fetch(`${backendURL}/progress/${videoId}`);
             const data = await response.json();
 
             if (data.status === "Completed") {
                 progressBar.value = 100;
                 progressText.innerText = "Download Complete!";
-                break; // Do not call updateDownloadedVideos here
+                break;
             } else if (data.status === "Failed") {
                 progressText.innerText = "Download Failed!";
                 break;
             } else {
-                // Ensure data.progress is a string before calling replace
                 const progressValue = typeof data.progress === 'string' ? parseInt(data.progress.replace('%', '')) : 0;
                 progressBar.value = progressValue;
                 progressText.innerText = `Downloading: ${data.progress || '0%'}`;
             }
 
-            await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5 seconds
+            await new Promise(resolve => setTimeout(resolve, 5000));
         } catch (error) {
             console.error("Error fetching progress:", error);
             break;
