@@ -65,17 +65,19 @@ async function downloadVideo(event, videoId) {
     event.stopPropagation();
 
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    console.log("Sending download request for:", videoUrl);  // Debug log
 
     try {
         const response = await fetch(`${backendURL}/download`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: videoUrl })
+            body: JSON.stringify({ url: videoUrl })  // Send full URL
         });
 
         if (!response.ok) throw new Error(`Server Error: ${response.status}`);
 
         const data = await response.json();
+        console.log("Download response:", data);  // Debug log
 
         if (data.video_id) {
             showProgress(data.video_id);
