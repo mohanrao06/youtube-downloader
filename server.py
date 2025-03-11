@@ -6,9 +6,15 @@ import threading
 import logging
 from flask.logging import default_handler
 
+
+
 # Create the Flask app
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+  # Allow all origins
+
+  
 
 # Disable logging for the /downloaded_videos route
 logging.getLogger('werkzeug').disabled = True
